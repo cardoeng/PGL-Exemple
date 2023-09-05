@@ -9,10 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.3.4"
+    "bootstrap": "5.2",
+    "vue": "^3.3.4",
+    "vuejs3-datepicker": "^1.0.19"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",
+    "sass": "^1.66.1",
     "vite": "^4.4.5"
   }
 }
