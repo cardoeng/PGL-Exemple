@@ -5,17 +5,17 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.format.annotation.DateTimeFormat;
-
 import java.util.Date;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
+@EqualsAndHashCode
 @Entity
 public class Member {
 
@@ -24,10 +24,10 @@ public class Member {
     private String lastName;
     private String email;
     private MemberStatus status;
-    @DateTimeFormat(pattern = "dd/MM/yyyy")
     private Date beginDate;
     @Nullable
-     @DateTimeFormat(pattern = "dd/MM/yyyy")
     private Date endDate;
+
+    
 
 }
