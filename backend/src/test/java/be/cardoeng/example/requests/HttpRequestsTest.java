@@ -3,6 +3,8 @@ package be.cardoeng.example.requests;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -109,6 +111,26 @@ public class HttpRequestsTest {
             .andReturn().getResponse().getContentAsString();
         Member saved = fromJson(s);
         assertEquals(member2, saved);
+    }
+
+    public void testConflictAddMember() throws Exception {
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+        Member member3 = new Member( // Values are not important, only id is
+            1,
+            "",
+            "",
+            "",
+            MemberStatus.Assistant,
+            new Date(),
+            null
+        );
+        this.mockMvc.perform(
+            post("/api/members")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(toJson(member3)))
+            .andExpect(status().isConflict());
+
     }
 
     @Test
