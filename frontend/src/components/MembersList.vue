@@ -1,17 +1,29 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import AddMember from './AddMember.vue'
+import { toast } from 'vue3-toastify';
 
 const members = ref([])
 const refreshing = ref(false)
+const addMemberModal = ref(null)
 
 async function refresh() {
   refreshing.value = true
   // wait a bit for simulation purpose
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  fetch('http://localhost:8080/api/members')
-    .then(response => response.json())
-    .then(data => members.value = data)
+
+  try {
+    const response = await toast.promise(fetch('http://localhost:8080/api/members'), {
+      pending: 'Chargement...',
+      error: 'Erreur du chargement de la liste des membres'
+    }, {
+      position: toast.POSITION.BOTTOM_RIGHT
+    });
+    const data = await response.json();
+    members.value = data;
+  } catch (error) {
+    console.log(error);
+  }
+  
   refreshing.value = false
 }
 
@@ -25,15 +37,22 @@ function parseDate(date) {
   return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' });
 }
 
+function addMember(member) {
+  members.value.push(member)
+}
+
+function openModal() {
+  addMemberModal.value.show();
+}
+
 </script>
 
 <template>
   <!-- The modal -->
-  <AddMember modalId="addMemberModal"/>
+  <AddMember modalId="addMemberModal" @memberAdded="addMember" ref="addMemberModal"/>
   <div class="py-4">
     <div class="btn-group" role="group">
-      <button type="button" class="btn btn-info btn-lg"
-      data-bs-toggle="modal" data-bs-target="#addMemberModal">
+      <button type="button" class="btn btn-info btn-lg" @click="openModal">
        Ajouter un membre
       </button>
       <!-- Call refresh in members list-->

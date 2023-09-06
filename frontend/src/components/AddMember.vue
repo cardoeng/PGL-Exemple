@@ -2,6 +2,9 @@
 
 import { onMounted, ref } from 'vue'
 import Datepicker from 'vuejs3-datepicker';
+import { toast } from 'vue3-toastify';
+import { Modal } from 'bootstrap';
+
 
 const props = defineProps({
     modalId: {
@@ -10,6 +13,9 @@ const props = defineProps({
     }
 })
 
+const emit = defineEmits(['memberAdded'])
+
+const block = ref(false)
 const matricule = ref(0)
 const firstName = ref('')
 const lastName = ref('')
@@ -17,13 +23,20 @@ const email = ref('')
 const status = ref('')
 const beginDate = ref('')
 const endDate = ref('')
+const modalElement = ref(null)
+let modalObject = null
 
-function addMember() {
+onMounted(() => {
+    modalObject = new Modal(modalElement.value)
+})
+
+async function addMember() {
+    block.value = true
     const member = {
         "id": matricule.value,
         "firstName": firstName.value,
         "lastName": lastName.value,
-        "email": email.value,
+        "email": email.value + "@umons.ac.be",
         "status": status.value,
         "beginDate": beginDate.value,
         "endDate": endDate.value == "" ? null : endDate.value
@@ -35,22 +48,80 @@ function addMember() {
         },
         body: JSON.stringify(member)
     }
-    console.log(options)
+
     // There are other ways (and maybe easier) of doing a post with third-party library
     // For the sake of simplicity, we use the native fetch API
-    fetch('http://localhost:8080/api/members', options)
-        .then(response => response.json())
-        .then(data => {
-            console.log(data)
-            $('#addMemberModal').modal('hide')
-        })
-        .catch(error => console.log(error))
 
+
+
+    try {
+        const toastId = ref('')
+        toastId.value = toast.loading('Ajout du membre...', {
+            autoClose: false,
+            position: toast.POSITION.BOTTOM_RIGHT
+        });
+        // make the request
+        const response = await fetch('http://localhost:8080/api/members', options)
+        // hide toast once the request is done
+        toast.remove(toastId.value)
+        if (response.ok) {
+            const data = await response.json();
+            // emit member added event
+            emit('memberAdded', data)
+            // hide the modal
+            reset()
+            _hide()
+            // We could technically update the previous toast
+            // But it is not working as expected
+            toast('Membre ajouté avec succès', {
+                type: toast.TYPE.SUCCESS,
+                autoClose: 5000,
+                position: toast.POSITION.BOTTOM_RIGHT
+            });
+        } else {
+            var error = "Erreur lors de l'ajout du membre"
+            if (response.status == 409) {
+                error = 'Un membre avec ce matricule existe déjà'
+            }
+            toast(error, {
+                type: toast.TYPE.ERROR,
+                autoClose: 10000,
+                position: toast.POSITION.BOTTOM_RIGHT
+            });
+        }
+    } catch (error) {
+        console.log(error);
+    }
+    block.value = false
 }
+
+function reset() {
+    matricule.value = 0
+    firstName.value = ''
+    lastName.value = ''
+    email.value = ''
+    status.value = ''
+    beginDate.value = ''
+    endDate.value = ''
+    block.value = false
+}
+
+function _show() {
+    modalObject.show()
+}
+
+function _hide() {
+    modalObject.hide()
+}
+
+defineExpose({
+    show: _show
+})
+
 </script>
 
 <template>
-    <div :id="props.modalId" class="modal fade" tabindex="-1">
+    <div :id="props.modalId" class="modal fade" tabindex="-1" ref="modalElement">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -105,7 +176,7 @@ function addMember() {
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" @click="addMember">Ajouter</button>
+                    <button type="button" class="btn btn-primary" @click="addMember" :disabled="block">Ajouter</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                 </div>
             </div>
