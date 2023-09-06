@@ -16,14 +16,16 @@ const props = defineProps({
 const emit = defineEmits(['memberAdded'])
 
 const block = ref(false)
-const matricule = ref(0)
-const firstName = ref('')
+const validForm = ref(false)
+const matricule = ref(-1)
+const firstName = ref(null)
 const lastName = ref('')
 const email = ref('')
 const status = ref('')
 const beginDate = ref('')
 const endDate = ref('')
 const modalElement = ref(null)
+const memberForm = ref(null)
 let modalObject = null
 
 onMounted(() => {
@@ -90,6 +92,7 @@ async function addMember() {
             });
         }
     } catch (error) {
+        toast.remove(toastId.value)
         console.log(error);
     }
     block.value = false
@@ -114,6 +117,32 @@ function _hide() {
     modalObject.hide()
 }
 
+function matriculeCheck(e) {
+    if (matricule.value <= 0) {
+        // add .is-invalid class to the input
+        e.target.classList.add('is-invalid')
+    } else {
+        // remove .is-invalid class from the input
+        e.target.classList.remove('is-invalid')
+    }
+    checkForm()
+}
+
+function notEmptyCheck(e) {
+    if (e.target && e.target.value == '') {
+        // add .is-invalid class to the input
+        e.target.classList.add('is-invalid')
+    } else {
+        // remove .is-invalid class from the input
+        e.target.classList.remove('is-invalid')
+    }
+    checkForm()
+}
+
+function checkForm() {
+    validForm.value = memberForm.value.checkValidity()
+}
+
 defineExpose({
     show: _show
 })
@@ -130,23 +159,27 @@ defineExpose({
                 </div>
                 
                 <div class="modal-body">
-                    <form>
+                    <form ref="memberForm">
                         <div class="mb-2">
                             <label for="matricule" class="form-label">Matricule*</label>
-                            <input type="number" id="matricule" class="form-control" placeholder="Matricule" v-model="matricule"/>
+                            <input type="number" id="matricule" class="form-control is-invalid" @input="matriculeCheck"
+                            placeholder="Matricule" v-model="matricule" required :disabled="block"/>
                         </div>
                         <div class="mb-2">
                             <label for="firstName" class="form-label">Prénom*</label>
-                            <input type="text" id="firstName" class="form-control" placeholder="Prénom" v-model="firstName" />
+                            <input type="text" id="firstName" class="form-control is-invalid" @input="notEmptyCheck"
+                            placeholder="Prénom" v-model="firstName" required :disabled="block"/>
                         </div>
                         <div class="mb-2">
                             <label for="lastName" class="form-label">Nom*</label>
-                            <input type="text" id="lastName" class="form-control" placeholder="Nom" v-model="lastName" />
+                            <input type="text" id="lastName" class="form-control is-invalid" @input="notEmptyCheck" 
+                            placeholder="Nom" v-model="lastName" required :disabled="block"/>
                         </div>
                         <div class="mb-2">
                             <label for="email" class="form-label">Email*</label>
                             <div class="input-group">
-                                <input type="text" id="email" class="form-control" placeholder="Email" v-model="email" />
+                                <input type="text" id="email" class="form-control is-invalid" @input="notEmptyCheck"
+                                placeholder="Email" v-model="email" required :disabled="block"/>
                                 <div class="input-group-append">
                                     <span class="input-group-text" id="basic-addon2">@umons.ac.be</span>
                                 </div>
@@ -154,7 +187,8 @@ defineExpose({
                         </div>
                         <div class="mb-2">
                             <label for="status" class="form-label">Status*</label>
-                            <select id="status" class="form-control" v-model="status">
+                            <select id="status" class="form-control is-invalid" @input="notEmptyCheck" 
+                            v-model="status" required :disabled="block">
                                 <option value="Professor">Professeur</option>
                                 <option value="Postdoc">Postdoc</option>
                                 <option value="PhD">Doctorant</option>
@@ -164,19 +198,21 @@ defineExpose({
                         <div class="mb-2">
                             <label for="beginDate" class="form-label">Date de début*</label>
                             <br>
-                            <datepicker id="beginDate" v-model="beginDate" :typeable="true" format="yyyy-MM-dd"/>
+                            <datepicker id="beginDate" v-model="beginDate" class="is-invalid" @input="notEmptyCheck"
+                            :typeable="true" format="yyyy-MM-dd" required :disabled="block"/>
                         </div>
                         <div class="mb-2">
                             <label for="endDate" class="form-label">Date de fin</label>
                             <br>
-                            <datepicker id="endDate" v-model="endDate" :typeable="true" format="yyyy-mm-dd"/>
+                            <datepicker id="endDate" v-model="endDate" :typeable="true" format="yyyy-mm-dd"
+                            :disabled="block"/>
                         </div>
 
                         <label>* Champs obligatoires</label>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" @click="addMember" :disabled="block">Ajouter</button>
+                    <button type="button" class="btn btn-primary" @click="addMember" :disabled="block || !validForm">Ajouter</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                 </div>
             </div>
