@@ -53,6 +53,9 @@ public class MemberController {
     @PatchMapping(path = "/{id}")
     public ResponseEntity<Member> patchMember(@PathVariable int id, @RequestBody Map<String, Object> m) {
         try {
+            if (m.containsKey("id"))
+                m.remove("id");
+            
             Member member = repository.findById(id).orElseThrow();
             objectMapper.updateValue(member, m);
             return ResponseEntity.ok(repository.save(member));

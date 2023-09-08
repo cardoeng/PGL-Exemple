@@ -2,7 +2,6 @@
 
 import { onMounted, ref } from 'vue'
 import Datepicker from 'vuejs3-datepicker';
-import { toast } from 'vue3-toastify';
 import { Modal } from 'bootstrap';
 
 
@@ -10,10 +9,23 @@ const props = defineProps({
     modalId: {
         type: String,
         required: true
+    },
+    makeRequest: {
+        type: Function,
+        required: true
+    },
+    title: {
+        type: String,
+        required: true
+    },
+    blockId: {
+        required: false,
+        default: false
     }
+
 })
 
-const emit = defineEmits(['memberAdded'])
+const emit = defineEmits(['success'])
 
 const block = ref(false)
 const validForm = ref(false)
@@ -32,72 +44,6 @@ onMounted(() => {
     modalObject = new Modal(modalElement.value)
 })
 
-async function addMember() {
-    block.value = true
-    const member = {
-        "id": matricule.value,
-        "firstName": firstName.value,
-        "lastName": lastName.value,
-        "email": email.value + "@umons.ac.be",
-        "status": status.value,
-        "beginDate": beginDate.value,
-        "endDate": endDate.value == "" ? null : endDate.value
-    }
-    const options = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(member)
-    }
-
-    // There are other ways (and maybe easier) of doing a post with third-party library
-    // For the sake of simplicity, we use the native fetch API
-
-
-
-    try {
-        const toastId = ref('')
-        toastId.value = toast.loading('Ajout du membre...', {
-            autoClose: false,
-            position: toast.POSITION.BOTTOM_RIGHT
-        });
-        // make the request
-        const response = await fetch('http://localhost:8080/api/members', options)
-        // hide toast once the request is done
-        toast.remove(toastId.value)
-        if (response.ok) {
-            const data = await response.json();
-            // emit member added event
-            emit('memberAdded', data)
-            // hide the modal
-            reset()
-            _hide()
-            // We could technically update the previous toast
-            // But it is not working as expected
-            toast('Membre ajouté avec succès', {
-                type: toast.TYPE.SUCCESS,
-                autoClose: 5000,
-                position: toast.POSITION.BOTTOM_RIGHT
-            });
-        } else {
-            var error = "Erreur lors de l'ajout du membre"
-            if (response.status == 409) {
-                error = 'Un membre avec ce matricule existe déjà'
-            }
-            toast(error, {
-                type: toast.TYPE.ERROR,
-                autoClose: 10000,
-                position: toast.POSITION.BOTTOM_RIGHT
-            });
-        }
-    } catch (error) {
-        toast.remove(toastId.value)
-        console.log(error);
-    }
-    block.value = false
-}
-
 function reset() {
     matricule.value = 0
     firstName.value = ''
@@ -109,7 +55,42 @@ function reset() {
     block.value = false
 }
 
-function _show() {
+async function submit() {
+    block.value = true
+    const member = {
+        "id": matricule.value,
+        "firstName": firstName.value,
+        "lastName": lastName.value,
+        "email": email.value + "@umons.ac.be",
+        "status": status.value,
+        "beginDate": beginDate.value,
+        "endDate": endDate.value == "" ? null : endDate.value
+    }
+    const data = await props.makeRequest(member)
+    if (data) {
+        emit('success', data)
+        reset()
+        _hide()
+    }
+    block.value = false
+}
+
+function _show(member) {
+    if (member) {
+        matricule.value = member.id
+        firstName.value = member.firstName
+        lastName.value = member.lastName
+        email.value = member.email.split('@')[0]
+        status.value = member.status
+        beginDate.value = member.beginDate
+        endDate.value = member.endDate
+        // We suppose that the member is valid by default
+        // So we remove every is-invalid class
+        memberForm.value.querySelectorAll('.is-invalid').forEach(e => {
+            e.classList.remove('is-invalid')
+        })
+        validForm.value = true
+    }
     modalObject.show()
 }
 
@@ -117,7 +98,7 @@ function _hide() {
     modalObject.hide()
 }
 
-function matriculeCheck(e) {
+function _matriculeCheck(e) {
     if (matricule.value <= 0) {
         // add .is-invalid class to the input
         e.target.classList.add('is-invalid')
@@ -125,10 +106,10 @@ function matriculeCheck(e) {
         // remove .is-invalid class from the input
         e.target.classList.remove('is-invalid')
     }
-    checkForm()
+    _checkForm()
 }
 
-function notEmptyCheck(e) {
+function _notEmptyCheck(e) {
     if (e.target && e.target.value == '') {
         // add .is-invalid class to the input
         e.target.classList.add('is-invalid')
@@ -136,15 +117,41 @@ function notEmptyCheck(e) {
         // remove .is-invalid class from the input
         e.target.classList.remove('is-invalid')
     }
-    checkForm()
+    _checkForm()
 }
 
-function checkForm() {
+function _emailCheck(e) {
+    if (e.target && (e.target.value == '' || e.target.value.includes('@'))) {
+        // the @ is automatically added when sending the request
+        // add .is-invalid class to the input
+        e.target.classList.add('is-invalid')
+    } else {
+        // remove .is-invalid class from the input
+        e.target.classList.remove('is-invalid')
+    }
+    _checkForm()
+}
+
+function _beginDateCheck(d) {
+    // query the input
+    const control = document.querySelector('#beginDate')
+    if (d == null) {
+        // add .is-invalid class to the input
+        control.classList.add('is-invalid')
+    } else {
+        // remove .is-invalid class from the input
+        control.classList.remove('is-invalid')
+    }
+    _checkForm()
+}
+
+function _checkForm() {
     validForm.value = memberForm.value.checkValidity()
 }
 
 defineExpose({
-    show: _show
+    show: _show,
+    hide: _hide
 })
 
 </script>
@@ -154,7 +161,7 @@ defineExpose({
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Ajouter un membre</h5>
+                    <h5 class="modal-title">{{ props.title }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
@@ -162,23 +169,23 @@ defineExpose({
                     <form ref="memberForm">
                         <div class="mb-2">
                             <label for="matricule" class="form-label">Matricule*</label>
-                            <input type="number" id="matricule" class="form-control is-invalid" @input="matriculeCheck"
-                            placeholder="Matricule" v-model="matricule" required :disabled="block"/>
+                            <input type="number" id="matricule" class="form-control is-invalid" @input="_matriculeCheck"
+                            placeholder="Matricule" v-model="matricule" required :disabled="block || props.blockId"/>
                         </div>
                         <div class="mb-2">
                             <label for="firstName" class="form-label">Prénom*</label>
-                            <input type="text" id="firstName" class="form-control is-invalid" @input="notEmptyCheck"
+                            <input type="text" id="firstName" class="form-control is-invalid" @input="_notEmptyCheck"
                             placeholder="Prénom" v-model="firstName" required :disabled="block"/>
                         </div>
                         <div class="mb-2">
                             <label for="lastName" class="form-label">Nom*</label>
-                            <input type="text" id="lastName" class="form-control is-invalid" @input="notEmptyCheck" 
+                            <input type="text" id="lastName" class="form-control is-invalid" @input="_notEmptyCheck" 
                             placeholder="Nom" v-model="lastName" required :disabled="block"/>
                         </div>
                         <div class="mb-2">
                             <label for="email" class="form-label">Email*</label>
                             <div class="input-group">
-                                <input type="text" id="email" class="form-control is-invalid" @input="notEmptyCheck"
+                                <input type="text" id="email" class="form-control is-invalid" @input="_emailCheck"
                                 placeholder="Email" v-model="email" required :disabled="block"/>
                                 <div class="input-group-append">
                                     <span class="input-group-text" id="basic-addon2">@umons.ac.be</span>
@@ -187,7 +194,7 @@ defineExpose({
                         </div>
                         <div class="mb-2">
                             <label for="status" class="form-label">Status*</label>
-                            <select id="status" class="form-control is-invalid" @input="notEmptyCheck" 
+                            <select id="status" class="form-control is-invalid" @input="_notEmptyCheck" 
                             v-model="status" required :disabled="block">
                                 <option value="Professor">Professeur</option>
                                 <option value="Postdoc">Postdoc</option>
@@ -198,13 +205,13 @@ defineExpose({
                         <div class="mb-2">
                             <label for="beginDate" class="form-label">Date de début*</label>
                             <br>
-                            <datepicker id="beginDate" v-model="beginDate" class="is-invalid" @input="notEmptyCheck"
+                            <datepicker id="beginDate" v-model="beginDate" class="is-invalid" @selected="_beginDateCheck"
                             :typeable="true" format="yyyy-MM-dd" required :disabled="block"/>
                         </div>
                         <div class="mb-2">
                             <label for="endDate" class="form-label">Date de fin</label>
                             <br>
-                            <datepicker id="endDate" v-model="endDate" :typeable="true" format="yyyy-mm-dd"
+                            <datepicker id="endDate" v-model="endDate" :typeable="true" format="yyyy-MM-dd"
                             :disabled="block"/>
                         </div>
 
@@ -212,7 +219,7 @@ defineExpose({
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" @click="addMember" :disabled="block || !validForm">Ajouter</button>
+                    <button type="button" class="btn btn-primary" @click="submit" :disabled="block || !validForm">Confirmer</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                 </div>
             </div>
