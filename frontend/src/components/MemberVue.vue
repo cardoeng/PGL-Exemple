@@ -1,8 +1,11 @@
 <script setup>
 
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, reactive } from 'vue'
 import Datepicker from 'vuejs3-datepicker';
 import { Modal } from 'bootstrap';
+import VueDatePicker from '@vuepic/vue-datepicker';
+import { useVuelidate } from '@vuelidate/core'
+import { required, email } from '@vuelidate/validators'
 
 
 const props = defineProps({
@@ -28,16 +31,50 @@ const props = defineProps({
 const emit = defineEmits(['success'])
 
 const block = ref(false)
-const validForm = ref(false)
-const matricule = ref(-1)
-const firstName = ref(null)
-const lastName = ref('')
-const email = ref('')
-const status = ref('')
-const beginDate = ref('')
-const endDate = ref('')
+
+const formState = reactive({
+    id: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    status: '',
+    beginDate: '',
+    endDate: ''
+})
+
+const mailCheck = (value) => {
+    // automatically added
+    return ! value.includes('@')
+}
+
+const rules = computed(() => ({
+    id: {
+        required,
+        min: 1
+    },
+    firstName: {
+        required
+    },
+    lastName: {
+        required
+    },
+    email: {
+        required, mailCheck
+    },
+    status: {
+        required
+    },
+    beginDate: {
+        required
+    },
+}))
+
+const v$ = useVuelidate(rules, formState)
+const validForm = computed(() => v$.value.$invalid === false)
+
 const modalElement = ref(null)
 const memberForm = ref(null)
+const beginDatePicker = ref(null)
 let modalObject = null
 
 onMounted(() => {
@@ -45,27 +82,19 @@ onMounted(() => {
 })
 
 function reset() {
-    matricule.value = 0
-    firstName.value = ''
-    lastName.value = ''
-    email.value = ''
-    status.value = ''
-    beginDate.value = ''
-    endDate.value = ''
+    formState.id = 0
+    formState.firstName = ''
+    formState.lastName = ''
+    formState.email = ''
+    formState.status = ''
+    formState.beginDate = ''
+    formState.endDate = ''
     block.value = false
 }
 
 async function submit() {
     block.value = true
-    const member = {
-        "id": matricule.value,
-        "firstName": firstName.value,
-        "lastName": lastName.value,
-        "email": email.value + "@umons.ac.be",
-        "status": status.value,
-        "beginDate": beginDate.value,
-        "endDate": endDate.value == "" ? null : endDate.value
-    }
+    const member = formState
     const data = await props.makeRequest(member)
     if (data) {
         emit('success', data)
@@ -77,19 +106,20 @@ async function submit() {
 
 function _show(member) {
     if (member) {
-        matricule.value = member.id
-        firstName.value = member.firstName
-        lastName.value = member.lastName
-        email.value = member.email.split('@')[0]
-        status.value = member.status
-        beginDate.value = member.beginDate
-        endDate.value = member.endDate
+        formState.id = member.id
+        formState.firstName = member.firstName
+        formState.lastName = member.lastName
+        formState.email = member.email
+        formState.status = member.status
+        formState.beginDate = member.beginDate
+        formState.endDate = member.endDate
+
+
         // We suppose that the member is valid by default
         // So we remove every is-invalid class
         memberForm.value.querySelectorAll('.is-invalid').forEach(e => {
             e.classList.remove('is-invalid')
         })
-        validForm.value = true
     }
     modalObject.show()
 }
@@ -98,56 +128,7 @@ function _hide() {
     modalObject.hide()
 }
 
-function _matriculeCheck(e) {
-    if (matricule.value <= 0) {
-        // add .is-invalid class to the input
-        e.target.classList.add('is-invalid')
-    } else {
-        // remove .is-invalid class from the input
-        e.target.classList.remove('is-invalid')
-    }
-    _checkForm()
-}
 
-function _notEmptyCheck(e) {
-    if (e.target && e.target.value == '') {
-        // add .is-invalid class to the input
-        e.target.classList.add('is-invalid')
-    } else {
-        // remove .is-invalid class from the input
-        e.target.classList.remove('is-invalid')
-    }
-    _checkForm()
-}
-
-function _emailCheck(e) {
-    if (e.target && (e.target.value == '' || e.target.value.includes('@'))) {
-        // the @ is automatically added when sending the request
-        // add .is-invalid class to the input
-        e.target.classList.add('is-invalid')
-    } else {
-        // remove .is-invalid class from the input
-        e.target.classList.remove('is-invalid')
-    }
-    _checkForm()
-}
-
-function _beginDateCheck(d) {
-    // query the input
-    const control = document.querySelector('#beginDate')
-    if (d == null) {
-        // add .is-invalid class to the input
-        control.classList.add('is-invalid')
-    } else {
-        // remove .is-invalid class from the input
-        control.classList.remove('is-invalid')
-    }
-    _checkForm()
-}
-
-function _checkForm() {
-    validForm.value = memberForm.value.checkValidity()
-}
 
 defineExpose({
     show: _show,
@@ -166,27 +147,32 @@ defineExpose({
                 </div>
                 
                 <div class="modal-body">
-                    <form ref="memberForm">
+                    <form ref="memberForm" id="memberForm" @submit.prevent="submit">
                         <div class="mb-2">
                             <label for="matricule" class="form-label">Matricule*</label>
-                            <input type="number" id="matricule" class="form-control is-invalid" @input="_matriculeCheck"
-                            placeholder="Matricule" v-model="matricule" required :disabled="block || props.blockId"/>
+                            <input type="number" id="matricule" class="form-control"
+                            :class="(v$.id.$invalid) ? 'is-invalid' : 'is-valid'"
+                            placeholder="Matricule" v-model="formState.id" :disabled="block || props.blockId"/>
+                            <div class="invalid-feedback">Le matricule doit être positif</div>
                         </div>
                         <div class="mb-2">
                             <label for="firstName" class="form-label">Prénom*</label>
-                            <input type="text" id="firstName" class="form-control is-invalid" @input="_notEmptyCheck"
-                            placeholder="Prénom" v-model="firstName" required :disabled="block"/>
+                            <input type="text" id="firstName" class="form-control"
+                            :class="(v$.firstName.$invalid) ? 'is-invalid' : 'is-valid'"
+                            placeholder="Prénom" v-model="formState.firstName" :disabled="block"/>
                         </div>
                         <div class="mb-2">
                             <label for="lastName" class="form-label">Nom*</label>
-                            <input type="text" id="lastName" class="form-control is-invalid" @input="_notEmptyCheck" 
-                            placeholder="Nom" v-model="lastName" required :disabled="block"/>
+                            <input type="text" id="lastName" class="form-control"
+                            :class="(v$.lastName.$invalid) ? 'is-invalid' : 'is-valid'"
+                            placeholder="Nom" v-model="formState.lastName" :disabled="block"/>
                         </div>
                         <div class="mb-2">
                             <label for="email" class="form-label">Email*</label>
                             <div class="input-group">
-                                <input type="text" id="email" class="form-control is-invalid" @input="_emailCheck"
-                                placeholder="Email" v-model="email" required :disabled="block"/>
+                                <input type="text" id="email" class="form-control"
+                                :class="(v$.email.$invalid) ? 'is-invalid' : 'is-valid'"
+                                placeholder="Email" v-model="formState.email" :disabled="block"/>
                                 <div class="input-group-append">
                                     <span class="input-group-text" id="basic-addon2">@umons.ac.be</span>
                                 </div>
@@ -194,8 +180,9 @@ defineExpose({
                         </div>
                         <div class="mb-2">
                             <label for="status" class="form-label">Status*</label>
-                            <select id="status" class="form-control is-invalid" @input="_notEmptyCheck" 
-                            v-model="status" required :disabled="block">
+                            <select id="status" class="form-control"
+                            :class="(v$.status.$invalid) ? 'is-invalid' : 'is-valid'"
+                            v-model="formState.status" required :disabled="block">
                                 <option value="Professor">Professeur</option>
                                 <option value="Postdoc">Postdoc</option>
                                 <option value="PhD">Doctorant</option>
@@ -205,21 +192,24 @@ defineExpose({
                         <div class="mb-2">
                             <label for="beginDate" class="form-label">Date de début*</label>
                             <br>
-                            <datepicker id="beginDate" v-model="beginDate" class="is-invalid" @selected="_beginDateCheck"
-                            :typeable="true" format="yyyy-MM-dd" required :disabled="block"/>
+                            <VueDatePicker id="beginDate" ref="beginDatePicker" 
+                            v-model="formState.beginDate" class="form-control"
+                            :class="(v$.beginDate.$invalid) ? 'is-invalid' : 'is-valid'"
+                            format="yyyy-MM-dd" :disabled="block" required />
                         </div>
                         <div class="mb-2">
                             <label for="endDate" class="form-label">Date de fin</label>
                             <br>
-                            <datepicker id="endDate" v-model="endDate" :typeable="true" format="yyyy-MM-dd"
-                            :disabled="block"/>
+                            <VueDatePicker id="endDate"
+                            v-model="formState.endDate" class="form-control"
+                            format="yyyy-MM-dd" :disabled="block" />
                         </div>
 
                         <label>* Champs obligatoires</label>
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" @click="submit" :disabled="block || !validForm">Confirmer</button>
+                    <button type="submit" class="btn btn-primary" @click="submit" :disabled="block || !validForm">Confirmer</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
                 </div>
             </div>
