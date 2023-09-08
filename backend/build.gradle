@@ -36,6 +36,16 @@ dependencies {
 	testImplementation 'org.hibernate:hibernate-core:6.2.8.Final'
 }
 
+
+task copyFrontend(type: Copy) {
+	dependsOn("resolveMainClassName")
+	// bug fix
+	dependsOn(":frontend:build")
+	from "$projectDir/../frontend/dist"
+	into "$buildDir/resources/main/static"
+}
+bootRun.dependsOn("copyFrontend")
+
 tasks.named('test') {
 	useJUnitPlatform()
 }
