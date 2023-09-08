@@ -15,7 +15,11 @@ public class LoadDatabase {
     @Bean
     CommandLineRunner initDatabase(MemberRepository repository) {
         return args -> {
-            repository.save(new Member(1, "Guillaume", "Cardoen", "Guillaume.CARDOEN@umons.ac.be",
+            repository.save(new Member(1, "Tom", "Mens", "Tom.MENS@umons.ac.be",
+                    MemberStatus.Assistant, new SimpleDateFormat("dd/MM/yyyy").parse("01/10/2003"), null));
+            repository.save(new Member(2, "Guillaume", "Cardoen", "Guillaume.CARDOEN@umons.ac.be",
+                    MemberStatus.Assistant, new SimpleDateFormat("dd/MM/yyyy").parse("15/09/2023"), null));
+            repository.save(new Member(3, "Valentin", "Dusollier", "Valentin.Dusollier@umons.ac.be",
                     MemberStatus.Assistant, new SimpleDateFormat("dd/MM/yyyy").parse("15/09/2023"), null));
         };
     }
