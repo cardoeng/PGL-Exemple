@@ -21,6 +21,8 @@ public class LoadDatabase {
                     MemberStatus.Assistant, new SimpleDateFormat("dd/MM/yyyy").parse("15/09/2023"), null));
             repository.save(new Member(3, "Valentin", "Dusollier", "Valentin.Dusollier@umons.ac.be",
                     MemberStatus.Assistant, new SimpleDateFormat("dd/MM/yyyy").parse("15/09/2023"), null));
+            repository.save(new Member(4, "Sébastien", "Bonte", "Sebastien.BONTE@umons.ac.be",
+                    MemberStatus.Assistant, new SimpleDateFormat("dd/MM/yyyy").parse("15/09/2019"), null));
         };
     }
 
