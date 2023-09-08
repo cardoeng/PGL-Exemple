@@ -9,3 +9,9 @@ Pour lancer le projet :
 ```sh
 ./gradlew bootRun
 ```
+
+Dans un navigateur web, allez ensuite sur : 
+
+```
+http://localhost:8080
+```
