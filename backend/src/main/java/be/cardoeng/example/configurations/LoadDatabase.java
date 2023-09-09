@@ -9,9 +9,21 @@ import org.springframework.context.annotation.Configuration;
 
 import java.text.SimpleDateFormat;
 
+/**
+ * <p class="en">A simple configuration to initialize the database with some data.</p>
+ * <p class="fr">Une simple configuration pour initialiser la base de données avec quelques données.</p>
+ */
 @Configuration
 public class LoadDatabase {
 
+    /**
+     * <p class="en">Initialize the database with some data.</p>
+     * <p class="fr">Initialise la base de données avec quelques données.</p>
+     * @param repository <p class="en">The repository to use to manage the members.</p>
+     * <p class="fr">Le dépôt à utiliser pour gérer les membres.</p>
+     * @return <p class="en">A {@link CommandLineRunner} to initialize the database.</p>
+     * <p class="fr">Un {@link CommandLineRunner} pour initialiser la base de données.</p>
+     */
     @Bean
     CommandLineRunner initDatabase(MemberRepository repository) {
         return args -> {
