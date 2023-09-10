@@ -12,11 +12,6 @@ const emit = defineEmits(['success'])
 /* If the entire form should be block or not */
 const block = ref(false)
 
-/* Initialize Vuelidate for validating the form (making sure
-the rules are respected) */
-const v$ = useVuelidate(rules, formState)
-const validForm = computed(() => v$.value.$invalid === false)
-
 /* A few elements of our form */
 const modalElement = ref(null)
 const memberForm = ref(null)
@@ -86,6 +81,11 @@ const rules = computed(() => ({
         required
     },
 }))
+
+/* Initialize Vuelidate for validating the form (making sure
+the rules are respected) */
+const v$ = useVuelidate(rules, formState)
+const validForm = computed(() => v$.value.$invalid === false)
 
 onMounted(() => {
     modalObject = new Modal(modalElement.value)
