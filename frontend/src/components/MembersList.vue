@@ -69,6 +69,9 @@ function _deleteMember(member) {
  * @param {*} member The member edited (suppose its ID did not change)
  */
 function _editMemberRequest(member) {
+  if (member == true) {
+    return // no change
+  }
   // We can afford to do this as we suppose there are not a lot of members
   const index = members.value.findIndex(m => m.id === member.id);
   return editMember(members.value[index], member);

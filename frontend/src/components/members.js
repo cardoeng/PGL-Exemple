@@ -124,7 +124,7 @@ async function editMember(old_member, member) {
             autoClose: 5000,
             position: toast.POSITION.BOTTOM_RIGHT
         });
-        return
+        return true
     }
     
     return makeRequest('/api/members/' + member.id, modified,

@@ -115,12 +115,14 @@ function reset() {
  */
 async function submit() {
     block.value = true
-    const member = formState
+    // copy the formState to avoid modifying it
+    const member = Object.assign({}, formState)
+    member.email = member.email + '@umons.ac.be'
     const data = await props.makeRequest(member)
     if (data) {
         emit('success', data)
-        reset()
         _hide()
+        reset()
     }
     block.value = false
 }
@@ -134,7 +136,7 @@ function _show(member) {
         formState.id = member.id
         formState.firstName = member.firstName
         formState.lastName = member.lastName
-        formState.email = member.email
+        formState.email = member.email.split('@')[0]
         formState.status = member.status
         formState.beginDate = member.beginDate
         formState.endDate = member.endDate
