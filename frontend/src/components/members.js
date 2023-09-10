@@ -1,6 +1,17 @@
 import { toast } from 'vue3-toastify';
 import { ref } from 'vue'
 
+/**
+ * Make a request to the server
+ * @param {String} url The URL
+ * @param {*} member The member to send
+ * @param {String} method The method (POST, PATCH, DELETE)
+ * @param {String | null} loadingMessage The message to show while loading
+ * @param {String | null} successMessage The message to show on success
+ * @param {String | null} errorMessage The message to show on error
+ * @param {String | null} conflictMessage The message to show on conflict
+ * @returns 
+ */
 async function makeRequest(url, member, method, loadingMessage, successMessage, 
     errorMessage, conflictMessage) {
     const options = {
@@ -54,16 +65,52 @@ async function makeRequest(url, member, method, loadingMessage, successMessage,
     
 }
 
+/**
+ * 
+ * @returns The list of members
+ */
+async function getMembers() {
+    try {
+      /* Add a toast (the notification shown on top of the page) */
+      const response = await toast.promise(fetch('/api/members'), {
+        pending: 'Chargement...',
+        error: 'Erreur du chargement de la liste des membres'
+      }, {
+        position: toast.POSITION.BOTTOM_RIGHT
+      });
+      /* Parse the data from JSON to a dictionary / map */
+      const data = await response.json();
+      
+      /* Set the value of our list */
+      return data
+    } catch (error) {
+      console.log(error);
+    }
+    return null;
+
+}
+
+/**
+ * Add a member
+ * @param {*} member  The member to add
+ * @returns The member added or false if an error occurred
+ */
 async function addMember(member) {
 
     // There are other ways (and maybe easier ways) of doing a post request with third-party library
     // For the sake of not using too much third-party libraries, I use the native fetch API
 
-    return makeRequest('http://localhost:8080/api/members', member, 
+    return makeRequest('/api/members', member, 
         'POST', 'Ajout du membre...', 'Membre ajouté avec succès', 
         "Erreur lors de l'ajout du membre", "Un membre avec ce matricule existe déjà")
 }
 
+/**
+ * Edit a member
+ * @param {*} old_member The old member
+ * @param {*} member The new member
+ * @returns The member edited or false if an error occurred
+ */
 async function editMember(old_member, member) {
     const modified = {}
     for (const key in member) {
@@ -80,15 +127,20 @@ async function editMember(old_member, member) {
         return
     }
     
-    return makeRequest('http://localhost:8080/api/members/' + member.id, modified,
+    return makeRequest('/api/members/' + member.id, modified,
         'PATCH', 'Modification du membre...', 'Membre modifié avec succès',
         "Erreur lors de la modification du membre", "Un conflit est survenu lors de la modification du membre")
 }
 
+/**
+ * Delete a member
+ * @param {*} member The member to delete
+ * @returns True if the member was deleted, false otherwise
+ */
 async function deleteMember(member) {
-    return makeRequest('http://localhost:8080/api/members/' + member.id, null,
+    return makeRequest('/api/members/' + member.id, null,
         'DELETE', 'Suppression du membre...', 'Membre supprimé avec succès',
         "Erreur lors de la suppression du membre", "Un conflit est survenu lors de la suppression du membre")
 }
 
-export { addMember, editMember, deleteMember }
+export { getMembers, addMember, editMember, deleteMember }

@@ -1,12 +1,13 @@
 <script setup>
 
 import { computed, onMounted, ref, reactive } from 'vue'
-import Datepicker from 'vuejs3-datepicker';
 import { Modal } from 'bootstrap';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import { useVuelidate } from '@vuelidate/core'
-import { required, email } from '@vuelidate/validators'
+import { required } from '@vuelidate/validators'
 
+/* We declare the list of attributes that we should (or could) 
+receive from the parents */
 
 const props = defineProps({
     modalId: {
@@ -28,9 +29,15 @@ const props = defineProps({
 
 })
 
+/* We declare we can emit a 'success' at some point */
+
 const emit = defineEmits(['success'])
 
+/* If the entire form should be block or not */
+
 const block = ref(false)
+
+/* The current state of the form (the data it represents) */
 
 const formState = reactive({
     id: '',
@@ -42,10 +49,15 @@ const formState = reactive({
     endDate: ''
 })
 
+/* Simple function to check if the email is what we want
+(we automatically add @umons.ac.be, so no @ should be in the email) */
+
 const mailCheck = (value) => {
     // automatically added
     return ! value.includes('@')
 }
+
+/* The rules that each part of our form should respect */
 
 const rules = computed(() => ({
     id: {
@@ -69,9 +81,12 @@ const rules = computed(() => ({
     },
 }))
 
+/* Initialize Vuelidate for validating the form (making sure
+the rules are respected) */
 const v$ = useVuelidate(rules, formState)
 const validForm = computed(() => v$.value.$invalid === false)
 
+/* A few elements of our form */
 const modalElement = ref(null)
 const memberForm = ref(null)
 const beginDatePicker = ref(null)
@@ -81,6 +96,9 @@ onMounted(() => {
     modalObject = new Modal(modalElement.value)
 })
 
+/**
+ * Reset the form to default value
+ */
 function reset() {
     formState.id = 0
     formState.firstName = ''
@@ -92,6 +110,9 @@ function reset() {
     block.value = false
 }
 
+/**
+ * Submit the form
+ */
 async function submit() {
     block.value = true
     const member = formState
@@ -104,6 +125,10 @@ async function submit() {
     block.value = false
 }
 
+/**
+ * Show the form with the default values or with the values of the given member
+ * @param {*} member The defaults value to show (optional)
+ */
 function _show(member) {
     if (member) {
         formState.id = member.id
@@ -120,15 +145,20 @@ function _show(member) {
         memberForm.value.querySelectorAll('.is-invalid').forEach(e => {
             e.classList.remove('is-invalid')
         })
+    } else {
+        reset()
     }
     modalObject.show()
 }
 
+/**
+ * Hide the form
+ */
 function _hide() {
     modalObject.hide()
 }
 
-
+/* Define what methods are exposed */
 
 defineExpose({
     show: _show,
@@ -137,24 +167,37 @@ defineExpose({
 
 </script>
 
+<!-- HTML part -->
+
 <template>
+    <!-- Declare a basic modal with bootstrap -->
     <div :id="props.modalId" class="modal fade" tabindex="-1" ref="modalElement">
         <div class="modal-dialog">
             <div class="modal-content">
+                <!-- The header (title) of our modal -->
                 <div class="modal-header">
                     <h5 class="modal-title">{{ props.title }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
+                <!-- The content of our modal (i.e. our form) -->
                 <div class="modal-body">
+                    <!-- Declare a form calling the submit method when the form
+                    should be submitted -->
                     <form ref="memberForm" id="memberForm" @submit.prevent="submit">
                         <div class="mb-2">
+                            <!-- Declare a label and a input for the id
+                            Add a class 'is-invalid' (bootstrap class) if Vuelidate detects that 
+                            this input does not follow the rules we set for it (required and > 0) -->
                             <label for="matricule" class="form-label">Matricule*</label>
                             <input type="number" id="matricule" class="form-control"
                             :class="(v$.id.$invalid) ? 'is-invalid' : 'is-valid'"
                             placeholder="Matricule" v-model="formState.id" :disabled="block || props.blockId"/>
-                            <div class="invalid-feedback">Le matricule doit être positif</div>
+                            <!-- Note the v-model attribute linking the value of this input to `formState.id` -->
+                            <!-- Feedback (text shown) if the input is invalid (has the 'is-invalid' class) -->
+                            <div class="invalid-feedback">Le matricule doit être positif (> 0)</div>
                         </div>
+                        <!-- The following always has the same template -->
                         <div class="mb-2">
                             <label for="firstName" class="form-label">Prénom*</label>
                             <input type="text" id="firstName" class="form-control"
@@ -173,6 +216,7 @@ defineExpose({
                                 <input type="text" id="email" class="form-control"
                                 :class="(v$.email.$invalid) ? 'is-invalid' : 'is-valid'"
                                 placeholder="Email" v-model="formState.email" :disabled="block"/>
+                                <!-- Show that we add @umons.ac.be to the input -->
                                 <div class="input-group-append">
                                     <span class="input-group-text" id="basic-addon2">@umons.ac.be</span>
                                 </div>
@@ -208,6 +252,7 @@ defineExpose({
                         <label>* Champs obligatoires</label>
                     </form>
                 </div>
+                <!-- The footer of the form (in our cases, confirm and cancel) -->
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary" @click="submit" :disabled="block || !validForm">Confirmer</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
