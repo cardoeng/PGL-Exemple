@@ -16,7 +16,7 @@ async function refresh() {
 
   const data = await getMembers();
   members.value = data;
-  
+
   refreshing.value = false
 }
 
@@ -108,22 +108,21 @@ function openEditModal(member) {
   <!-- The modal -->
   <!-- We could only use one and call method to motify the title, ...
   For the sake of the example and simplicity, this is not done here -->
-  <MemberVue modalId="addMemberModal" @success="_addMember" title="Ajouter un membre" 
-  :makeRequest="addMember" ref="addMemberModal"/>
-  <MemberVue modalId="editMemberModal" @success="_editMember" title="Modifier un membre"
-  :makeRequest="_editMemberRequest" blockId=true ref="editMemberModal"/>
+  <MemberVue modalId="addMemberModal" @success="_addMember" title="Ajouter un membre" :makeRequest="addMember"
+    ref="addMemberModal" />
+  <MemberVue modalId="editMemberModal" @success="_editMember" title="Modifier un membre" :makeRequest="_editMemberRequest"
+    blockId=true ref="editMemberModal" />
 
   <!-- The actions button (refresh and add a member) -->
   <div class="py-4">
     <div class="btn-group" role="group">
       <button type="button" class="btn btn-info btn-lg" @click="openAddModal">
-       Ajouter un membre
+        Ajouter un membre
       </button>
       <!-- Call refresh in members list-->
-      <button type="button" class="btn btn-info btn-lg"
-        @click="refresh" :disabled="refreshing">
-          Rafraîchir
-        </button>
+      <button type="button" class="btn btn-info btn-lg" @click="refresh" :disabled="refreshing">
+        Rafraîchir
+      </button>
     </div>
   </div>
 
@@ -144,12 +143,12 @@ function openEditModal(member) {
       </thead>
       <tbody>
         <tr v-for="member in members">
-          <td>{{member.firstName}}</td>
-          <td>{{member.lastName}}</td>
-          <td>{{member.email}}</td>
-          <td>{{member.status}}</td>
-          <td>{{parseDate(member.beginDate)}}</td>
-          <td>{{member.endDate == null ? null : parseDate(member.endDate)}}</td>
+          <td>{{ member.firstName }}</td>
+          <td>{{ member.lastName }}</td>
+          <td>{{ member.email }}</td>
+          <td>{{ member.status }}</td>
+          <td>{{ parseDate(member.beginDate) }}</td>
+          <td>{{ member.endDate == null ? null : parseDate(member.endDate) }}</td>
           <td>
             <div class="btn-group" role="group">
               <button type="button" class="btn btn-info btn-sm" @click="openEditModal(member)">

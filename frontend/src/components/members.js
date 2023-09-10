@@ -12,7 +12,7 @@ import { ref } from 'vue'
  * @param {String | null} conflictMessage The message to show on conflict
  * @returns 
  */
-async function makeRequest(url, member, method, loadingMessage, successMessage, 
+async function makeRequest(url, member, method, loadingMessage, successMessage,
     errorMessage, conflictMessage) {
     const options = {
         method: method,
@@ -33,7 +33,7 @@ async function makeRequest(url, member, method, loadingMessage, successMessage,
         const response = await fetch(url, options)
 
         if (response.ok) {
-    
+
             // We could technically update the previous toast
             // But it is not working as expected
             toast(successMessage, {
@@ -62,7 +62,7 @@ async function makeRequest(url, member, method, loadingMessage, successMessage,
         // hide toast once the request is done
         toast.remove(toastId.value)
     }
-    
+
 }
 
 /**
@@ -71,20 +71,20 @@ async function makeRequest(url, member, method, loadingMessage, successMessage,
  */
 async function getMembers() {
     try {
-      /* Add a toast (the notification shown on top of the page) */
-      const response = await toast.promise(fetch('/api/members'), {
-        pending: 'Chargement...',
-        error: 'Erreur du chargement de la liste des membres'
-      }, {
-        position: toast.POSITION.BOTTOM_RIGHT
-      });
-      /* Parse the data from JSON to a dictionary / map */
-      const data = await response.json();
-      
-      /* Set the value of our list */
-      return data
+        /* Add a toast (the notification shown on top of the page) */
+        const response = await toast.promise(fetch('/api/members'), {
+            pending: 'Chargement...',
+            error: 'Erreur du chargement de la liste des membres'
+        }, {
+            position: toast.POSITION.BOTTOM_RIGHT
+        });
+        /* Parse the data from JSON to a dictionary / map */
+        const data = await response.json();
+
+        /* Set the value of our list */
+        return data
     } catch (error) {
-      console.log(error);
+        console.log(error);
     }
     return null;
 
@@ -100,8 +100,8 @@ async function addMember(member) {
     // There are other ways (and maybe easier ways) of doing a post request with third-party library
     // For the sake of not using too much third-party libraries, I use the native fetch API
 
-    return makeRequest('/api/members', member, 
-        'POST', 'Ajout du membre...', 'Membre ajouté avec succès', 
+    return makeRequest('/api/members', member,
+        'POST', 'Ajout du membre...', 'Membre ajouté avec succès',
         "Erreur lors de l'ajout du membre", "Un membre avec ce matricule existe déjà")
 }
 
@@ -126,7 +126,7 @@ async function editMember(old_member, member) {
         });
         return true
     }
-    
+
     return makeRequest('/api/members/' + member.id, modified,
         'PATCH', 'Modification du membre...', 'Membre modifié avec succès',
         "Erreur lors de la modification du membre", "Un conflit est survenu lors de la modification du membre")
