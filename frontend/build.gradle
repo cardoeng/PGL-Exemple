@@ -4,6 +4,7 @@ plugins {
 
 node {
     workDir = file("${project.buildDir}")
+    download=true
 }
 
 task build(type: NpmTask) {
