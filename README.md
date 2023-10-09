@@ -1,4 +1,4 @@
-# Example d'application avec SpringBoot et Vue.JS
+# Exemple d'application avec SpringBoot et Vue.JS
 
 Ceci est un exemple simple d'une application avec Spring Boot et Vue.JS.
 
