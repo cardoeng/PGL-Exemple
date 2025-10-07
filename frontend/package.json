@@ -11,14 +11,14 @@
   "dependencies": {
     "@vuelidate/core": "^2.0.3",
     "@vuelidate/validators": "^2.0.4",
-    "@vuepic/vue-datepicker": "^6.0.3",
-    "bootstrap": "5.2",
-    "vue": "^3.3.4",
-    "vue3-toastify": "^0.1.12"
+    "@vuepic/vue-datepicker": "^11.0.2",
+    "bootstrap": "5.3",
+    "vue": "^3.5.22",
+    "vue3-toastify": "^0.2.8"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.2.3",
-    "sass": "^1.66.1",
-    "vite": "^4.4.5"
+    "@vitejs/plugin-vue": "^6.0.1",
+    "sass": "^1.93.2",
+    "vite": "^7.1.9"
   }
 }
