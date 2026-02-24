@@ -2,8 +2,7 @@ package be.cardoeng.example.controllers;
 
 import be.cardoeng.example.entities.Member;
 import be.cardoeng.example.repositories.MemberRepository;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -118,8 +117,6 @@ public class MemberController {
             return ResponseEntity.ok(repository.save(member));
         } catch (NoSuchElementException e) {
             return ResponseEntity.notFound().build();
-        } catch (JsonMappingException e) {
-            return ResponseEntity.badRequest().build();
         }
     }
 
